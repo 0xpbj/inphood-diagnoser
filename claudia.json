@@ -1,0 +1,11 @@
+{
+  "lambda": {
+    "role": "diagnoser-executor",
+    "name": "diagnoser",
+    "region": "us-west-2"
+  },
+  "api": {
+    "id": "k9n1buu5z1",
+    "module": "bot"
+  }
+}

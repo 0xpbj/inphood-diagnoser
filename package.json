@@ -1,0 +1,23 @@
+{
+  "name": "diagnoser",
+  "version": "1.0.0",
+  "description": "",
+  "main": "bot.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://gitlab.com/inphood/diagnoser.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://gitlab.com/inphood/diagnoser/issues"
+  },
+  "homepage": "https://gitlab.com/inphood/diagnoser#README",
+  "dependencies": {
+    "claudia-bot-builder": "^2.15.0",
+    "huh": "^2.0.1"
+  }
+}
