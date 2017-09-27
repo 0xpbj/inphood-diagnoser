@@ -258,13 +258,15 @@ function diagnosisScript(userId, text) {
           if (score < 5) {
             return 'Congratulations! From the answers you provided, it does ' +
                    'not appear that you are at increased risk for ' +
-                   'having type 2 diabetes.'
+                   'having type 2 diabetes. ' +
+                   'Learn more: https://doihaveprediabetes.org/ '
           }
           return 'From your answers, it appears you are at increased risk of ' +
                  'having type 2 diabetes. In future we\'ll be able to connect ' +
                  'you with healthcare resources that can help. For now, you ' +
                  'should see a doctor--and get a HBA1C test to confirm if ' +
-                 'have type 2 diabetes or prediabetes.'
+                 'have type 2 diabetes or prediabetes. ' +
+                 'Learn more: https://doihaveprediabetes.org/ '
 
         default:
           return 'Thank you for participating. In future we\'ll be able to ' +

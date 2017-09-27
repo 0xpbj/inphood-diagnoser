@@ -17,4 +17,4 @@ module.exports = botBuilder(function (request) {
   // return text
   return tp.processMessage(userId, text)
 
-}, { platforms: ['facebook', 'twilio', 'viber', 'telegram', 'kik', 'groupme'] })
+}, { platforms: ['facebook', 'twilio', 'telegram'] })
