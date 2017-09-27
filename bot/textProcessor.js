@@ -1,3 +1,5 @@
+let dotEnv = require('dotenv').config({path: './.env-production'})
+
 const requestPromise = require('request-promise')
 const firebase = require('firebase')
 
@@ -13,11 +15,15 @@ if (firebase.apps.length === 0) {
 }
 
 function diagnosisScript(userId, text) {
-  const dbRef = firebase.database().ref(
-    '/global/diagnosisai/users/' + userId)
-  dbRef.set({visited: true})
+  const dbUserRef = firebase.database().ref('/global/diagnosisai/users/' + userId)
 
-  return 'You (' + userId + ') said ' + text
+  return dbUserRef.once("value")
+  .then(function(snapshot) {
+    if (snapshot.val() === null) {
+      return 'User doesn\'t exist'
+    }
+    return 'User exists'  
+  })
 }
 
 exports.processMessage = function(userId, text) {

@@ -1,4 +1,3 @@
-let dotEnv = require('dotenv').config({path: './../.env-production'})
 let botBuilder = require('claudia-bot-builder')
 let tp = require('./textProcessor.js')
 

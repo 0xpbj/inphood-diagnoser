@@ -1,7 +1,7 @@
 {
   "name": "conversations",
   "version": "1.0.0",
-  "description": "Area to prototype conversations for sugarinfoAI.",
+  "description": "Area to prototype conversations for diagnosisAI.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -10,7 +10,6 @@
   "license": "ISC",
   "dependencies": {
     "dotenv": "^4.0.0",
-    "firebase": "^4.3.0",
     "prompt": "^1.0.0"
   }
 }
