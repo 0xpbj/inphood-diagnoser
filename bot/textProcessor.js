@@ -4,7 +4,6 @@ const requestPromise = require('request-promise')
 const firebase = require('firebase')
 
 if (firebase.apps.length === 0) {
-  console.log('FIREBASE_API_KEY = ' + process.env.FIREBASE_API_KEY)
   firebase.initializeApp({
     apiKey: process.env.FIREBASE_API_KEY,
     authDomain: process.env.FIREBASE_AUTH_DOMAIN,
@@ -38,6 +37,7 @@ const heightWeightLUT = {
 
 function getHeightWeightScore(height, weight) {
   if (!height || !weight || !(height in heightWeightLUT)) {
+    console.log('@@@@@@@@@@@@@@@@@@@@@@@@@@@ problem height')
     return -1
   }
   let fixQuotesHeight = height.replace('’', '\'')
@@ -79,7 +79,7 @@ function diagnosisScript(userId, text) {
       let score = userData.score
       let nextState = userData.nextState
 
-      if (userInput === 'reset') {
+      if (userInput === 'reset' || userInput === 'start') {
         nextState = 0
       }
 
@@ -263,7 +263,7 @@ function diagnosisScript(userId, text) {
           return 'From your answers, it appears you are at increased risk of ' +
                  'having type 2 diabetes. In future we\'ll be able to connect ' +
                  'you with healthcare resources that can help. For now, you ' +
-                 'should see a doctor--only they can tell for sure if you ' +
+                 'should see a doctor--and get a HBA1C test to confirm if ' +
                  'have type 2 diabetes or prediabetes.'
 
         default:
