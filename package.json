@@ -17,7 +17,9 @@
   },
   "homepage": "https://gitlab.com/inphood/diagnoser#README",
   "dependencies": {
+    "aws-sdk": "^2.123.0",
     "claudia-bot-builder": "^2.15.0",
+    "dotenv": "^4.0.0",
     "huh": "^2.0.1"
   }
 }
