@@ -4,6 +4,7 @@ const requestPromise = require('request-promise')
 const firebase = require('firebase')
 
 if (firebase.apps.length === 0) {
+  console.log('FIREBASE_API_KEY = ' + process.env.FIREBASE_API_KEY)
   firebase.initializeApp({
     apiKey: process.env.FIREBASE_API_KEY,
     authDomain: process.env.FIREBASE_AUTH_DOMAIN,
@@ -13,38 +14,52 @@ if (firebase.apps.length === 0) {
   })
 }
 
+// The keys below are height in feet and inches with the quotes removed.
+// For example:  4'10" --> 410
+//
 const heightWeightLUT = {
-  '4\'10"': [119, 142, 143, 190, 191],
-  '4\'11"': [124, 147, 148, 197, 198],
-  '5\'0"': [128, 152, 153, 203, 204],
-  '5\'1"': [132, 157, 158, 210, 211],
-  '5\'2"': [136, 163, 164, 217, 218],
-  '5\'3"': [141, 168, 169, 224, 225],
-  '5\'4"': [145, 173, 174, 231, 232],
-  '5\'5"': [150, 179, 180, 239, 240],
-  '5\'6"': [155, 185, 186, 246, 247],
-  '5\'7"': [159, 190, 191, 254, 255],
-  '5\'8"': [164, 196, 197, 261, 262],
-  '5\'9"': [169, 202, 203, 269, 270],
-  '5\'10"': [174, 208, 209, 277, 278],
-  '5\'11"': [179, 214, 215, 285, 286],
-  '6\'0"': [184, 220, 221, 293, 294],
-  '6\'1"': [189, 226, 227, 301, 302],
-  '6\'2"': [194, 232, 233, 310, 311],
-  '6\'3"': [200, 239, 240, 318, 319],
-  '6\'4"': [205, 245, 246, 327, 328]
+  '410': [119, 142, 143, 190, 191],
+  '411': [124, 147, 148, 197, 198],
+  '50': [128, 152, 153, 203, 204],
+  '51': [132, 157, 158, 210, 211],
+  '52': [136, 163, 164, 217, 218],
+  '53': [141, 168, 169, 224, 225],
+  '54': [145, 173, 174, 231, 232],
+  '55': [150, 179, 180, 239, 240],
+  '56': [155, 185, 186, 246, 247],
+  '57': [159, 190, 191, 254, 255],
+  '58': [164, 196, 197, 261, 262],
+  '59': [169, 202, 203, 269, 270],
+  '510': [174, 208, 209, 277, 278],
+  '511': [179, 214, 215, 285, 286],
+  '60': [184, 220, 221, 293, 294],
+  '61': [189, 226, 227, 301, 302],
+  '62': [194, 232, 233, 310, 311],
+  '63': [200, 239, 240, 318, 319],
+  '64': [205, 245, 246, 327, 328]
 }
 
 function getHeightWeightScore(height, weight) {
-  if (!height || !weight || !(height in heightWeightLUT)) {
-    console.log('@@@@@@@@@@@@@@@@@@@@@@@@@@@ problem height')
+  console.log('getHeightWeightScore:')
+  if (!height || !weight) {
+    console.log('  returning -1: height or weight undefined/null/etc.')
     return -1
   }
-  let fixQuotesHeight = height.replace('’', '\'')
-  fixQuotesHeight = fixQuotesHeight.replace('”', '"')
-  console.log('getHeightWeightScore. fixQuotesHeight:' + fixQuotesHeight)
-  console.log('  weight:'+weight)
 
+  // TODO: put this in a single one liner regex w/ character classes
+  let fixQuotesHeight = height.replace('’', '')
+  fixQuotesHeight = fixQuotesHeight.replace('\'', '')
+  fixQuotesHeight = fixQuotesHeight.replace('”', '')
+  fixQuotesHeight = fixQuotesHeight.replace('"', '')
+  fixQuotesHeight = fixQuotesHeight.replace(' ', '')
+
+  if (!(fixQuotesHeight in heightWeightLUT)) {
+    console.log('  returning -1: fixQuotesHeight('+fixQuotesHeight+') not in heightWeightLUT')
+    return -1
+  }
+
+  console.log('  fixQuotesHeight:' + fixQuotesHeight)
+  console.log('  weight:'+weight)
   const boundsArr = heightWeightLUT[fixQuotesHeight]
   if (weight >=  boundsArr[0] && weight <= boundsArr[1]) {
     return 1
@@ -133,8 +148,8 @@ function diagnosisScript(userId, text) {
             score += 1
             dbUserRef.update({lastState: 2, nextState: 4, score: score})
             return 'Thanks.\n\nDo you have a mother, father, sister, or brother with diabetes? (yes or no)'
-          } else if (userInput === 'female' || userInput === 'w' ||
-                     userInput === 'woman') {
+          } else if (userInput === 'female' || userInput === 'f' ||
+                     userInput === 'w' || userInput === 'woman') {
             dbUserRef.update({lastState: 2, nextState: 3, score: score})
             return 'Thanks.\n\nHave you ever been diagnosed with gestational diabetes? (yes or no)'
           }
@@ -208,7 +223,7 @@ function diagnosisScript(userId, text) {
             return 'I didn\'t understand ' + text + '. Try again: (yes or no)'
           }
           dbUserRef.update({lastState: 6, nextState: 7, score: score})
-          return 'What is your height? (e.g.: 5\'0")'
+          return 'What is your height? (e.g.: 5 0  or 5\'0")'
         //
         //////////////
         // State  7 //
@@ -220,9 +235,11 @@ function diagnosisScript(userId, text) {
           // Quick test for height format--TODO: something better that handles
           // spaces, units etc. (unicode and funky quotes too)
           console.log('Case 7. userInput:' + userInput)
-          if (userInput.search(/[2-8]['’][0-9]+[01]*["”]/i) === -1) {
+          const position = userInput.search(/[2-8]['’\s][0-9]+[01]*["”]*/i)
+          if (position === -1) {
             dbUserRef.update({lastState: 7, nextState: 7})
-            return 'I didn\'t understand ' + text + '. Try again: (e.g. 5\'0")'
+            console.log('  Position: '+position)
+            return 'I didn\'t understand ' + text + '. Try again: (e.g.: 5 0  or 5\'0")'
           }
 
           dbUserRef.update({lastState: 7, nextState: 8, height: text})
@@ -258,15 +275,13 @@ function diagnosisScript(userId, text) {
           if (score < 5) {
             return 'Congratulations! From the answers you provided, it does ' +
                    'not appear that you are at increased risk for ' +
-                   'having type 2 diabetes. ' +
-                   'Learn more: https://doihaveprediabetes.org/ '
+                   'having type 2 diabetes.'
           }
           return 'From your answers, it appears you are at increased risk of ' +
                  'having type 2 diabetes. In future we\'ll be able to connect ' +
                  'you with healthcare resources that can help. For now, you ' +
-                 'should see a doctor--and get a HBA1C test to confirm if ' +
-                 'have type 2 diabetes or prediabetes. ' +
-                 'Learn more: https://doihaveprediabetes.org/ '
+                 'should see a doctor--only they can tell for sure if you ' +
+                 'have type 2 diabetes or prediabetes.'
 
         default:
           return 'Thank you for participating. In future we\'ll be able to ' +
