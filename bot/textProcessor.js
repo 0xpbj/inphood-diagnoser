@@ -148,11 +148,16 @@ function diagnosisScript(request) {
         return requestPromise(fbOptions)
         .then(result => {
           const {first_name, last_name, locale, timezone, gender} = result.body
-          dbUserRef.update({lastState: -1, nextState: 0, score: 0,
+          let dataObj = {lastState: -1, nextState: 0, score: 0,
             first_name: first_name, last_name: last_name, locale: locale,
             client: client, userId: userId, timezone: timezone, gender: gender,
-            setupTime: setupTime})
-          dbEncryptWrite(userId, dataObj)
+            setupTime: setupTime}
+          // dbUserRef.update({lastState: -1, nextState: 0, score: 0,
+          //   first_name: first_name, last_name: last_name, locale: locale,
+          //   client: client, userId: userId, timezone: timezone, gender: gender,
+          //   setupTime: setupTime})
+          dbUserRef.update(dataObj)
+          // dbEncryptWrite(userId, dataObj)
 
             // Interestingly, in Spanish, names of languages are not capitalized.
             // See: http://www.spanishdict.com/answers/225670/i-didnt-know-that-rules-of-spanish-capitalization
@@ -184,7 +189,7 @@ function diagnosisScript(request) {
         }
 
         dbUserRef.update(dataObj)
-        dbEncryptWrite(userId, dataObj)
+        // dbEncryptWrite(userId, dataObj)
 
         // Interestingly, in Spanish, names of languages are not capitalized.
         // See: http://www.spanishdict.com/answers/225670/i-didnt-know-that-rules-of-spanish-capitalization
@@ -233,8 +238,8 @@ function diagnosisScript(request) {
           //       predicate involving state and language:
           if (language === 'Spanish') {
             return 'Hola, soy AI de diagnóstico! Puedo decir si usted está en ' +
-              'riesgo de diabetes tipo 2 o prediabetes y conectar con la ayuda ' +
-              'efectiva. Sus posibilidades de evitar con éxito esta condición ' +
+              'riesgo de diabetes tipo 2 o prediabetes y conectarle con la ayuda ' +
+              'efectiva. Sus posibilidades de evitar esta condición con éxito ' +
               'son excelentes!\n\n' +
               '¿Qué edad tiene? (por ejemplo, 41)'
           }
@@ -487,7 +492,7 @@ function diagnosisScript(request) {
                 '¡Ayúdenos a difundir la palabra sobre la Diabetes Tipo 2! ' +
                 'Comparte el chatbot con tus amigos y familiares 🎁!\n'
                 'Texto: +1 (415) 917-4663\n' +
-                'Facebook: m.me/diagnoserai\n' +
+                // 'Facebook: m.me/diagnoserai\n' +
                 'Telegram: t.me/diagnoserbot'
             }
             else {
@@ -497,7 +502,7 @@ function diagnosisScript(request) {
                 'Help us spread the word about Type 2 Diabetes! ' +
                 'Share the chatbot with your friends and family 🎁!\n' +
                 'Text: +1(415) 917-4663 \n' +
-                'Facebook: m.me/diagnoserai\n' +
+                // 'Facebook: m.me/diagnoserai\n' +
                 'Telegram: t.me/diagnoserbot'
             }
           } else {
@@ -537,14 +542,14 @@ function diagnosisScript(request) {
               '¡Ayúdenos a difundir la palabra sobre la Diabetes Tipo 2!' +
               'Comparte el chatbot con tus amigos y familiares 🎁!\n' +
               'Texto: +1 (415) 917-4663\n' +
-              'Facebook: m.me/diagnoserai\n' +
+              // 'Facebook: m.me/diagnoserai\n' +
               'Telegram: t.me/diagnoserbot'
           }
           return 'Thank you for your interest! We will send you an update when we have the clinic locator feature in place.\n' +
             'Help us spread the word about Type 2 Diabetes! ' +
             'Share the chatbot with your friends and family 🎁!\n' +
             'Text: +1(415) 917-4663 \n' +
-            'Facebook: m.me/diagnoserai\n' +
+            // 'Facebook: m.me/diagnoserai\n' +
             'Telegram: t.me/diagnoserbot'
         //
         //////////////
