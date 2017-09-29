@@ -202,7 +202,7 @@ function diagnosisScript(request) {
       let nextState = userData.nextState
       let language = userData.language
 
-      if (userInput === 'reset' || userInput === 'start') {
+      if (userInput === 'reset' || userInput === 'start' || userInput === '\/start') {
         nextState = 0
       }
 
