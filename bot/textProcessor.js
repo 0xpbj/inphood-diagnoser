@@ -218,7 +218,7 @@ function diagnosisScript(request) {
           } else if (userInput === '2' || userInput === 'español' || userInput === 'espanol') {
             language = 'Spanish'
           } else if (userInput === 'reset' || userInput === 'start') {
-            // dbUserRef.update({lastState: 0, nextState: 0, score: 0})
+            dbUserRef.update({lastState: 0, nextState: 0, score: 0})
             return 'Please type \'1\' to chat in English.\n' +
                    'Escribe \'2\' para chatear en español.'
           } else {
