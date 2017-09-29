@@ -241,7 +241,7 @@ function diagnosisScript(request) {
               'riesgo de diabetes tipo 2 o prediabetes y conectarle con la ayuda ' +
               'efectiva. Sus posibilidades de evitar esta condición con éxito ' +
               'son excelentes!\n\n' +
-              '¿Qué edad tiene? (por ejemplo, 41)'
+              '¿Cuántos años tiene? (por ejemplo, 41)'
           }
           return 'Hello, I am Diagnoser AI! I can tell if you\'re at risk for ' +
              'type 2 diabetes or prediabetes and connect you to effective help. ' +
@@ -298,7 +298,7 @@ function diagnosisScript(request) {
             score += 1
             dbUserRef.update({lastState: 2, nextState: 4, score: score})
             if (language === 'Spanish') {
-              return 'Gracias.\n\n¿Tienes familiares (mamá, papá, hermano, hermana) que padecen diabetes? (si o no)'
+              return 'Gracias.\n\n¿Tiene familiares (mamá, papá, hermano, hermana) que padecen diabetes? (si o no)'
             }
             return 'Thanks.\n\nDo you have a mother, father, sister, or brother with diabetes? (yes or no)'
           } else if (((language === 'Spanish') &&
@@ -337,7 +337,7 @@ function diagnosisScript(request) {
           }
           dbUserRef.update({lastState: 3, nextState: 4, score: score})
           if (language === 'Spanish') {
-            return '¿Tienes familiares (mamá, papá, hermano, hermana) que padecen diabetes? (si o no)'
+            return '¿Tiene familiares (mamá, papá, hermano, hermana) que padecen diabetes? (si o no)'
           }
           return 'Do you have a mother, father, sister, or brother with diabetes? (yes or no)'
         //
@@ -384,7 +384,9 @@ function diagnosisScript(request) {
           }
           dbUserRef.update({lastState: 5, nextState: 6, score: score})
           if (language === 'Spanish') {
-            return '¿Realiza algún tipo de actividad físcia? (si o no)'
+            // Google translate:
+            return '¿Es usted activo físicamente? (si o no)'
+            // return '¿Realiza algún tipo de actividad físcia? (si o no)'
           }
           return 'Are you physically active? (yes or no)'
         //
@@ -407,7 +409,7 @@ function diagnosisScript(request) {
           }
           dbUserRef.update({lastState: 6, nextState: 7, score: score})
           if (language === 'Spanish') {
-            return 'Cuan alto eres (por ejemplo: 5 0  ó  5\'0")'
+            return '¿Cuánto mide es? (por ejemplo: 5 0  o  5\'0")'
           }
           return 'What is your height? (e.g.: 5 0  or  5\'0")'
         //
