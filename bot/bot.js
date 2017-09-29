@@ -2,21 +2,7 @@ let botBuilder = require('claudia-bot-builder')
 let tp = require('./textProcessor.js')
 
 module.exports = botBuilder(function (request) {
-  const text = request.text
-  let userId
-  if (request.type === 'facebook') {
-    userId = request.originalRequest.sender.id
-    console.log(request, request.originalRequest)
-  }
-  else if (request.type === 'telegram') {
-    userId = request.originalRequest.message.from.id
-    console.log(request, request.originalRequest)
-  }
-  else if (request.type === 'twilio') {
-    userId = request.sender
-    console.log(request, request.originalRequest)
-  }
   // return text
-  return tp.processMessage(userId, text)
+  return tp.processMessage(request)
 
 }, { platforms: ['facebook', 'twilio', 'telegram'] })

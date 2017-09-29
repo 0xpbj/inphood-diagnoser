@@ -3,6 +3,8 @@ let dotEnv = require('dotenv').config({path: './.env-production'})
 const requestPromise = require('request-promise')
 const firebase = require('firebase')
 
+const cryptoUtils = require('./cryptoUtils.js')
+
 if (firebase.apps.length === 0) {
   console.log('FIREBASE_API_KEY = ' + process.env.FIREBASE_API_KEY)
   firebase.initializeApp({
@@ -71,26 +73,124 @@ function getHeightWeightScore(height, weight) {
   return 0
 }
 
-function diagnosisScript(userId, text) {
+function getIdFromRequest(request) {
+  if (request.type === 'facebook') {
+    return request.originalRequest.sender.id
+  }
+  else if (request.type === 'telegram') {
+    return request.originalRequest.message.from.id
+  }
+  else if (request.type === 'twilio') {
+    return request.sender
+  }
+  // TODO: other plafs...
+  return undefined
+}
+
+
+function dbEncryptWrite(userId, dataObj) {
+  const eDataObj = cryptoUtils.encryptObj(dataObj)
+
+  console.log('dbEncryptWrite: ')
+  console.log('  ' + eDataObj)
+  const dbUserRef = firebase.database().ref('/global/diagnosisai/users/' + userId)
+  dbUserRef.set(eDataObj)
+}
+
+function dbUpdateEncryptedObj(userId, dataObj, updateKeyValues) {
+  for (key in updateKeyValues) {
+    dataObj[key] = updateKeyValues[key]
+  }
+
+  dbEncryptWrite(userId, dataObj)
+}
+
+function diagnosisScript(request) {
+  const text = request.text
+  const userId = getIdFromRequest(request)
+
   console.log('diagnosisScript. userId:' + userId + ', text:' + text)
   const dbUserRef = firebase.database().ref('/global/diagnosisai/users/' + userId)
 
   return dbUserRef.once("value")
   .then(function(snapshot) {
     if (snapshot.val() === null) {
-      console.log('  state 0 (initializing user in db)')
-      //////////////
+      console.log('  state -1 (initializing user in db)')
+      ///////////////
       // State  -1 //
-      //////////////
-      dbUserRef.update({lastState: -1, nextState: 0, score: 0})
-      // Interestingly, in Spanish, names of languages are not capitalized.
-      // See: http://www.spanishdict.com/answers/225670/i-didnt-know-that-rules-of-spanish-capitalization
-      return 'Please type \'1\' to chat in English.\n' +
-             'Escribe \'2\' para chatear en español.'
+      //////////////////////////////////////////////////////////////////////////
+      let client = request.type
+      const theDate = new Date()
+      let setupTime = theDate.toUTCString()
+
+      if (client === 'facebook') {
+        // TODO: Prabhaav fix the access token etc. below to prevent the error in
+        //       this link--then uncomment the code in the requestPromise below:
+        //
+        // https://us-west-2.console.aws.amazon.com/cloudwatch/home?region=us-west-2#logEventViewer:group=/aws/lambda/diagnoser;stream=2017/09/29/%5B$LATEST%5Daaba390e61d34ff69e9bff4ae963848a
+        var fbOptions = {
+          uri: 'https://graph.facebook.com/v2.6/' + userId,
+          method: 'GET',
+          json: true,
+          qs: {
+            fields: 'first_name,last_name,profile_pic,locale,timezone,gender',
+            access_token: 'EAAJhTtF5K30BAObDIIHWxtZA0EtwbVX6wEciIZAHwrwBJrXVXFZCy69Pn07SoyzZAeZCEmswE0jUzamY7Nfy71cZB8O7BSZBpTZAgbDxoYEE5Og7nbkoQvMaCafrBkH151s4wl91zOCLbafkdJiWLIc6deW9jSZBYdjh2NE4JbDSZBAwZDZD'
+          },
+          resolveWithFullResponse: true
+        }
+        return requestPromise(fbOptions)
+        .then(result => {
+          const {first_name, last_name, locale, timezone, gender} = result.body
+          dbUserRef.update({lastState: -1, nextState: 0, score: 0,
+            first_name: first_name, last_name: last_name, locale: locale,
+            client: client, userId: userId, timezone: timezone, gender: gender,
+            setupTime: setupTime})
+
+            // Interestingly, in Spanish, names of languages are not capitalized.
+            // See: http://www.spanishdict.com/answers/225670/i-didnt-know-that-rules-of-spanish-capitalization
+            return 'Please type \'1\' to chat in English.\n' +
+                   'Escribe \'2\' para chatear en español.'
+        })
+        .catch(error => {
+          console.log('FB Profile error:', error)
+          return ''
+        })
+      } else {
+        let dataObj = {lastState: -1, nextState: 0, score: 0,
+          client: client, userId: userId, setupTime: setupTime}
+
+        if (client === 'telegram') {
+          let first_name = request.originalRequest.message.from.first_name
+          let last_name = request.originalRequest.message.from.last_name
+          let locale = request.originalRequest.message.from.language_code
+          // Check for undefined (cuases problems with firebase ref set otherwise)
+          if (first_name) {
+            dataObj.first_name = first_name
+          }
+          if (last_name) {
+            dataObj.last_name = last_name
+          }
+          if (locale) {
+            dataObj.locale = locale
+          }
+        }
+
+        dbUserRef.update(dataObj)
+        // dbEncryptWrite(userId, dataObj)
+
+        // Interestingly, in Spanish, names of languages are not capitalized.
+        // See: http://www.spanishdict.com/answers/225670/i-didnt-know-that-rules-of-spanish-capitalization
+        return 'Please type \'1\' to chat in English.\n' +
+               'Escribe \'2\' para chatear en español.'
+      }
     } else {
       const userInput = text.toLowerCase()
 
-      const userData = snapshot.val()
+      let userData = snapshot.val()
+
+      // const eUserData = snapshot.val()
+      // let userData = cryptoUtils.decryptObj(eUserData)
+
       let score = userData.score
       let nextState = userData.nextState
       let language = userData.language
@@ -111,7 +211,7 @@ function diagnosisScript(userId, text) {
           } else if (userInput === '2' || userInput === 'español' || userInput === 'espanol') {
             language = 'Spanish'
           } else if (userInput === 'reset' || userInput === 'start') {
-            dbUserRef.update({lastState: 0, nextState: 0, score: 0})
+            // dbUserRef.update({lastState: 0, nextState: 0, score: 0})
             return 'Please type \'1\' to chat in English.\n' +
                    'Escribe \'2\' para chatear en español.'
           } else {
