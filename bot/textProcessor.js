@@ -141,7 +141,7 @@ function diagnosisScript(request) {
           json: true,
           qs: {
             fields: 'first_name,last_name,profile_pic,locale,timezone,gender',
-            access_token: 'EAAJhTtF5K30BAObDIIHWxtZA0EtwbVX6wEciIZAHwrwBJrXVXFZCy69Pn07SoyzZAeZCEmswE0jUzamY7Nfy71cZB8O7BSZBpTZAgbDxoYEE5Og7nbkoQvMaCafrBkH151s4wl91zOCLbafkdJiWLIc6deW9jSZBYdjh2NE4JbDSZBAwZDZD'
+            access_token: 'EAAcT18XMvZAUBAIWZBw561uakUee3QIceArLFAYo2c9WUQu3mxUWZAoQgnK9FMxJKOvZBvvGm16l23vJCqyDMU87Q6hVR00xpb1SNQhg0TiAzdTIvlLadAYIV5RpbRabjzvMgZCYLrlr8GmZBvj8uHM2lYbZBZB9SfKX38uXq5JaqgZDZD'
           },
           resolveWithFullResponse: true
         }
@@ -152,7 +152,7 @@ function diagnosisScript(request) {
             first_name: first_name, last_name: last_name, locale: locale,
             client: client, userId: userId, timezone: timezone, gender: gender,
             setupTime: setupTime})
-          // dbEncryptWrite(userId, dataObj)
+          dbEncryptWrite(userId, dataObj)
 
             // Interestingly, in Spanish, names of languages are not capitalized.
             // See: http://www.spanishdict.com/answers/225670/i-didnt-know-that-rules-of-spanish-capitalization
@@ -184,7 +184,7 @@ function diagnosisScript(request) {
         }
 
         dbUserRef.update(dataObj)
-        // dbEncryptWrite(userId, dataObj)
+        dbEncryptWrite(userId, dataObj)
 
         // Interestingly, in Spanish, names of languages are not capitalized.
         // See: http://www.spanishdict.com/answers/225670/i-didnt-know-that-rules-of-spanish-capitalization
@@ -401,7 +401,7 @@ function diagnosisScript(request) {
           }
           dbUserRef.update({lastState: 6, nextState: 7, score: score})
           if (language === 'Spanish') {
-            return 'Cuan alto eres (por ejemplo: 5 0  ó  5\'O")'
+            return 'Cuan alto eres (por ejemplo: 5 0  ó  5\'0")'
           }
           return 'What is your height? (e.g.: 5 0  or  5\'0")'
         //
@@ -480,47 +480,49 @@ function diagnosisScript(request) {
           if (score < 5) {
             dbUserRef.update({lastState: 8, nextState: 10, score: score})
             if (language === 'Spanish') {
-              return [
-                '¡Felicitaciones! De las respuestas que proporcionó, no ' +
-                'parece que usted está en mayor riesgo de tener diabetes ' +
-                'tipo 2.',
+              return '¡Felicitaciones! De las respuestas que proporcionó, no ' +
+                'parece que usted está en mayor riesgo de tener Diabetes ' +
+                'Tipo 2.\n' +
                 '¡Ayúdenos a difundir la palabra sobre la Diabetes Tipo 2! ' +
-                'Comparte el chatbot con tus amigos y familiares 🎁!',
+                'Comparte el chatbot con tus amigos y familiares 🎁!\n'
                 'Texto: +1 (415) 917-4663\n' +
                 'Facebook: m.me/diagnoserai\n' +
-                'Telegram: t.me/diagnoserbot']
+                'Telegram: t.me/diagnoserbot'
             }
-            return [
-              'Congratulations! From the answers you provided, it does ' +
-              'not appear that you are at increased risk for ' +
-              'having type 2 diabetes. ',
-              'Help us spread the word about Type 2 Diabetes! ' +
-              'Share the chatbot with your friends and family 🎁!',
-              'Text: +1(415) 917-4663 \n' +
-              'Facebook: m.me/diagnoserai\n' +
-              'Telegram: t.me/diagnoserbot']
+            else {
+              return 'Congratulations! From the answers you provided, it does ' +
+                'not appear that you are at increased risk for ' +
+                'having Type 2 Diabetes.\n' +
+                'Help us spread the word about Type 2 Diabetes! ' +
+                'Share the chatbot with your friends and family 🎁!\n' +
+                'Text: +1(415) 917-4663 \n' +
+                'Facebook: m.me/diagnoserai\n' +
+                'Telegram: t.me/diagnoserbot'
+            }
           } else {
             dbUserRef.update({lastState: 8, nextState: 9, score: score})
             if (language === 'Spanish') {
-              return [
-                'De sus respuestas, parece que usted está en mayor riesgo de ' +
+              return 'De sus respuestas, parece que usted está en mayor riesgo de ' +
                 'tener diabetes tipo 2. En el futuro, podremos conectarte con ' +
-                'recursos de salud que pueden ayudarte. Por ahora, debe ' +
+                'recursos de salud que pueden ayudarte.\n' +
+                'Por ahora, debe ' +
                 'consultar a un médico y obtener una prueba HBA1C para ' +
-                'confirmar si tiene diabetes tipo 2 o prediabetes. Más ' +
-                'información: https://doihaveprediabetes.org/',
+                'confirmar si tiene diabetes tipo 2 o prediabetes.\n' +
+                'Mas Información: https://doihaveprediabetes.org/\n' +
                 '¿Desea que localizemos la clínica HBA1C más cercana para ' +
-                'confirmar su diagnóstico? (si o no)']
+                'confirmar su diagnóstico? (si o no)'
             }
-            return [
-              'From your answers, it appears you are at increased risk of ' +
-              'having type 2 diabetes. In future we\'ll be able to connect ' +
-              'you with healthcare resources that can help. For now, you ' +
-              'should see a doctor--and get a HBA1C test to confirm if ' +
-              'have type 2 diabetes or prediabetes. ' +
-              'Learn more: https://doihaveprediabetes.org/ ' ,
-              'Would you like us to locate the closest HBA1C clinic to ' +
-              'confirm your diagnosis? (yes or no)']
+            else {
+              return 'From your answers, it appears you are at increased risk of ' +
+                'having Type 2 Diabetes. In future we\'ll be able to connect ' +
+                'you with healthcare resources.\n' +
+                'For now, you ' +
+                'should see a doctor--and get a HBA1C test to confirm if ' +
+                'have type 2 diabetes or prediabetes.\n' +
+                'Learn more: https://doihaveprediabetes.org/\n' +
+                'Would you like us to locate the closest HBA1C clinic to ' +
+                'confirm your diagnosis? (yes or no)'
+            }
           }
         //
         //////////////
@@ -529,22 +531,20 @@ function diagnosisScript(request) {
         case 9:
           dbUserRef.update({lastState: 9, nextState: 10, clinicFinder: text})
           if (language === 'Spanish') {
-            return [
-              '¡Gracias por su interés! Le enviaremos una actualización ' +
-              'cuando tengamos la función de localizador de clínica en su lugar.',
-              '¡Ayúdenos a difundir la palabra sobre la Diabetes Tipo 2! ' +
-              'Comparte el chatbot con tus amigos y familiares 🎁!',
+            return '¡Gracias por su interés! Le enviaremos una actualización ' +
+              'cuando tengamos la función de localizador de clínica en su lugar.\n' +
+              '¡Ayúdenos a difundir la palabra sobre la Diabetes Tipo 2!' +
+              'Comparte el chatbot con tus amigos y familiares 🎁!\n' +
               'Texto: +1 (415) 917-4663\n' +
               'Facebook: m.me/diagnoserai\n' +
-              'Telegram: t.me/diagnoserbot']
+              'Telegram: t.me/diagnoserbot'
           }
-          return [
-            'Thank you for your interest! We will send you an update when we have the clinic locator feature is in place.',
+          return 'Thank you for your interest! We will send you an update when we have the clinic locator feature is in place.\n' +
             'Help us spread the word about Type 2 Diabetes! ' +
-            'Share the chatbot with your friends and family 🎁!',
+            'Share the chatbot with your friends and family 🎁!\n' +
             'Text: +1(415) 917-4663 \n' +
             'Facebook: m.me/diagnoserai\n' +
-            'Telegram: t.me/diagnoserbot']
+            'Telegram: t.me/diagnoserbot'
         //
         //////////////
         // No State //
