@@ -192,7 +192,8 @@ function diagnosisScript(request) {
                'Escribe \'2\' para chatear en español.'
       }
     } else {
-      const userInput = text.toLowerCase()
+      let userInput = text.toLowerCase()
+      userInput = userInput.trim()
 
       let userData = (enableEncryption) ?
         cryptoUtils.decryptObj(snapshot.val()) :
@@ -514,10 +515,10 @@ function diagnosisScript(request) {
             }
             else {
               return 'From your answers, it appears you are at increased risk of ' +
-                'having Type 2 Diabetes. In future we\'ll be able to connect ' +
+                'having Type 2 Diabetes. In the future we\'ll be able to connect ' +
                 'you with healthcare resources.\n' +
                 'For now, you ' +
-                'should see a doctor--and get a HBA1C test to confirm if ' +
+                'should see a doctor--and get a HBA1C test to confirm if you ' +
                 'have type 2 diabetes or prediabetes.\n' +
                 'Learn more: https://doihaveprediabetes.org/\n' +
                 'Would you like us to locate the closest HBA1C clinic to ' +
@@ -539,7 +540,7 @@ function diagnosisScript(request) {
               'Facebook: m.me/diagnoserai\n' +
               'Telegram: t.me/diagnoserbot'
           }
-          return 'Thank you for your interest! We will send you an update when we have the clinic locator feature is in place.\n' +
+          return 'Thank you for your interest! We will send you an update when we have the clinic locator feature in place.\n' +
             'Help us spread the word about Type 2 Diabetes! ' +
             'Share the chatbot with your friends and family 🎁!\n' +
             'Text: +1(415) 917-4663 \n' +
@@ -556,7 +557,7 @@ function diagnosisScript(request) {
                    'encuentra que está en riesgo. Escriba \'reset \' si desea ' +
                    'probar de nuevo la evaluación de riesgos.'
           }
-          return 'Thank you for participating. In future we\'ll be able to ' +
+          return 'Thank you for participating. In the future we\'ll be able to ' +
                  'connect you to a Diabetes Prevention Program if you were ' +
                  'found to be at risk. Type \'reset\' if you\'d like to try ' +
                  'the risk assessment again.'
