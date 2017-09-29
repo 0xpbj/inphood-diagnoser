@@ -6,9 +6,11 @@ module.exports = botBuilder(function (request) {
   let userId
   if (request.type === 'facebook') {
     userId = request.originalRequest.sender.id
+    console.log(request, request.originalRequest)
   }
   else if (request.type === 'telegram') {
     userId = request.originalRequest.message.from.id
+    console.log(request, request.originalRequest)
   }
   else if (request.type === 'twilio') {
     userId = request.sender

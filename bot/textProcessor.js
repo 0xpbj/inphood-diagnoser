@@ -72,7 +72,7 @@ function getHeightWeightScore(height, weight) {
 }
 
 function diagnosisScript(userId, text) {
-  console.log('diagnosisScript. userId:'+userId+', text:'+text)
+  console.log('diagnosisScript. userId:' + userId + ', text:' + text)
   const dbUserRef = firebase.database().ref('/global/diagnosisai/users/' + userId)
 
   return dbUserRef.once("value")
@@ -80,19 +80,20 @@ function diagnosisScript(userId, text) {
     if (snapshot.val() === null) {
       console.log('  state 0 (initializing user in db)')
       //////////////
-      // State  0 //
+      // State  -1 //
       //////////////
-      dbUserRef.update({lastState: 0, nextState: 1, score: 0})
-      return 'Hello, I am Diagnoser AI! I can tell if you\'re at risk for ' +
-             'type 2 diabetes or prediabetes and connect you to effective help. ' +
-             'Your chances of successfully avoiding this condition are excellent!\n\n' +
-             'How many years old are you? (e.g. 41)'
+      dbUserRef.update({lastState: -1, nextState: 0, score: 0})
+      // Interestingly, in Spanish, names of languages are not capitalized.
+      // See: http://www.spanishdict.com/answers/225670/i-didnt-know-that-rules-of-spanish-capitalization
+      return 'Please type \'1\' to chat in English.\n' +
+             'Escribe \'2\' para chatear en español.'
     } else {
       const userInput = text.toLowerCase()
 
       const userData = snapshot.val()
       let score = userData.score
       let nextState = userData.nextState
+      let language = userData.language
 
       if (userInput === 'reset' || userInput === 'start') {
         nextState = 0
@@ -105,7 +106,30 @@ function diagnosisScript(userId, text) {
         // State  0 //
         ////////////////////////////////////////////////////////////////////////
         case 0:
-          dbUserRef.update({lastState: 0, nextState: 1, score: 0})
+          if (userInput === '1' || userInput === 'english') {
+            language = 'US_English'
+          } else if (userInput === '2' || userInput === 'español' || userInput === 'espanol') {
+            language = 'Spanish'
+          } else if (userInput === 'reset' || userInput === 'start') {
+            dbUserRef.update({lastState: 0, nextState: 0, score: 0})
+            return 'Please type \'1\' to chat in English.\n' +
+                   'Escribe \'2\' para chatear en español.'
+          } else {
+            dbUserRef.update({lastState: 0, nextState: 0, score: 0})
+            return 'I didn\'t understand ' + userInput + ', please type \'1\' to chat in English.\n' +
+                   'No entendi ' + userInput + '. Escribe \'2\' para chatear en español.'
+          }
+          dbUserRef.update({lastState: 0, nextState: 1, score: 0, language: language})
+
+          // TODO: Move this to a file and make it more regular and based on a
+          //       predicate involving state and language:
+          if (language === 'Spanish') {
+            return 'Hola, soy AI de diagnóstico! Puedo decir si usted está en ' +
+              'riesgo de diabetes tipo 2 o prediabetes y conectar con la ayuda ' +
+              'efectiva. Sus posibilidades de evitar con éxito esta condición ' +
+              'son excelentes!\n\n' +
+              '¿Qué edad tiene? (por ejemplo, 41)'
+          }
           return 'Hello, I am Diagnoser AI! I can tell if you\'re at risk for ' +
              'type 2 diabetes or prediabetes and connect you to effective help. ' +
              'Your chances of successfully avoiding this condition are excellent!\n\n' +
@@ -120,9 +144,15 @@ function diagnosisScript(userId, text) {
           const age = parseInt(text)
           if (age === NaN) {
             dbUserRef.update({lastState: 1, nextState: 1})
+            if (language === 'Spanish') {
+              return 'No entendí '+ text +'. Inténtalo de nuevo:'
+            }
             return 'I didn\'t understand ' + text + '. Try again:'
           } else if (age <= 0) {
             dbUserRef.update({lastState: 1, nextState: 1})
+            if (language === 'Spanish') {
+              return 'Probemos un número mayor que cero. Inténtalo de nuevo:'
+            }
             return 'Let\'s try a number greater than zero. Try again:'
           }
           if (age >= 40 && age <= 49) {
@@ -133,6 +163,10 @@ function diagnosisScript(userId, text) {
             score += 3
           }
           dbUserRef.update({lastState: 1, nextState: 2, score: score})
+          if (language === 'Spanish') {
+            return 'Bueno. ¿Es usted hombre o mujer? ' +
+              '(hombre o mujer)'
+          }
           return 'Okay. Next question--are you a male or female? (male or female)'
         //
         //////////////
@@ -144,16 +178,31 @@ function diagnosisScript(userId, text) {
           //       if female nextState = 3
           //       if male nextState = 4
 
-          if (userInput === 'male' || userInput === 'm' || userInput === 'man') {
+          if (((language === 'Spanish') &&
+               (userInput === 'hombre' || userInput === 'h')) ||
+              ((language === 'US_English') &&
+               (userInput === 'male' || userInput === 'm' || userInput === 'man'))) {
             score += 1
             dbUserRef.update({lastState: 2, nextState: 4, score: score})
+            if (language === 'Spanish') {
+              return 'Gracias.\n\n¿Tienes familiares (mamá, papá, hermano, hermana) que padecen diabetes? (si o no)'
+            }
             return 'Thanks.\n\nDo you have a mother, father, sister, or brother with diabetes? (yes or no)'
-          } else if (userInput === 'female' || userInput === 'f' ||
-                     userInput === 'w' || userInput === 'woman') {
+          } else if (((language === 'Spanish') &&
+                      (userInput === 'mujer' || userInput === 'm')) ||
+                     ((language === 'US_English') &&
+                      (userInput === 'female' || userInput === 'f' ||
+                       userInput === 'w' || userInput === 'woman'))) {
             dbUserRef.update({lastState: 2, nextState: 3, score: score})
+            if (language === 'Spanish') {
+              return 'Gracias.\n\n¿tuvo alguna vez diabetes gestacional (glucosa/azúcar alta durante el embarazo)? (si o no)'
+            }
             return 'Thanks.\n\nHave you ever been diagnosed with gestational diabetes? (yes or no)'
           }
           dbUserRef.update({lastState: 2, nextState: 2})
+          if (language === 'Spanish') {
+            return 'No entendí '+ text +'.\n\nPor favor, inténtelo de nuevo. ¿Es usted hombre o mujer?'
+          }
           return 'I didn\'t understand ' + text + '.\n\nPlease try again, male or female?'
         //
         //////////////
@@ -162,15 +211,21 @@ function diagnosisScript(userId, text) {
         case 3:
           // TODO: parse yes/no for gestational diabetes. Assign score.
           //       If unable to parse, ask again--clarify with example.
-          if (userInput === 'yes' || userInput === 'y') {
+          if (userInput === 'yes' || userInput === 'y' || userInput === 'sí' || userInput === 'si' || userInput === 's') {
             score += 1
           } else if (userInput === 'no' || userInput === 'n') {
             // no-op
           } else {
             dbUserRef.update({lastState: 3, nextState: 3})
+            if (language === 'Spanish') {
+              return 'No entendí '+ text +'. Inténtalo de nuevo: (sí o no)'
+            }
             return 'I didn\'t understand ' + text + '. Try again: (yes or no)'
           }
           dbUserRef.update({lastState: 3, nextState: 4, score: score})
+          if (language === 'Spanish') {
+            return '¿Tienes familiares (mamá, papá, hermano, hermana) que padecen diabetes? (si o no)'
+          }
           return 'Do you have a mother, father, sister, or brother with diabetes? (yes or no)'
         //
         //////////////
@@ -179,15 +234,21 @@ function diagnosisScript(userId, text) {
         case 4:
           // TODO: parse yes/no for family with diabetes. Assign score.
           //       If unable to parse ask again--clarify with example.
-          if (userInput === 'yes' || userInput === 'y') {
+          if (userInput === 'yes' || userInput === 'y' || userInput === 'sí' || userInput === 'si' || userInput === 's') {
             score += 1
           } else if (userInput === 'no' || userInput === 'n') {
             // no-op
           } else {
             dbUserRef.update({lastState: 4, nextState: 4})
+            if (language === 'Spanish') {
+              return 'No entendí '+ text +'. Inténtalo de nuevo: (sí o no)'
+            }
             return 'I didn\'t understand ' + text + '. Try again: (yes or no)'
           }
           dbUserRef.update({lastState: 4, nextState: 5, score: score})
+          if (language === 'Spanish') {
+            return '¿Alguna vez le ha dicho un profesional de salud que tiene presión arterial alta (o hipertensión)? (si o no)'
+          }
           return 'Have you ever been diagnosed with high blood pressure? (yes or no)'
         //
         //////////////
@@ -197,15 +258,21 @@ function diagnosisScript(userId, text) {
           // TODO: parse yes/no for high blood pressure. Assign score.
           //       If unable to parse, ask again--clarify with example.
           // TODO: help them understand what physically active is
-          if (userInput === 'yes' || userInput === 'y') {
+          if (userInput === 'yes' || userInput === 'y' || userInput === 'sí' || userInput === 'si' || userInput === 's') {
             score += 1
           } else if (userInput === 'no' || userInput === 'n') {
             // no-op
           } else {
             dbUserRef.update({lastState: 5, nextState: 5})
+            if (language === 'Spanish') {
+              return 'No entendí '+ text +'. Inténtalo de nuevo: (sí o no)'
+            }
             return 'I didn\'t understand ' + text + '. Try again: (yes or no)'
           }
           dbUserRef.update({lastState: 5, nextState: 6, score: score})
+          if (language === 'Spanish') {
+            return '¿Realiza algún tipo de actividad físcia? (si o no)'
+          }
           return 'Are you physically active? (yes or no)'
         //
         //////////////
@@ -214,16 +281,22 @@ function diagnosisScript(userId, text) {
         case 6:
           // TODO: parse yes/no for physically active. Assign score.
           //       If unable to parse, ask again--clarify with example.
-          if (userInput === 'yes' || userInput === 'y') {
+          if (userInput === 'yes' || userInput === 'y' || userInput === 'sí' || userInput === 'si' || userInput === 's') {
             // no-op
           } else if (userInput === 'no' || userInput === 'n') {
             score += 1
           } else {
             dbUserRef.update({lastState: 6, nextState: 6})
+            if (language === 'Spanish') {
+              return 'No entendí '+ text +'. Inténtalo de nuevo: (sí o no)'
+            }
             return 'I didn\'t understand ' + text + '. Try again: (yes or no)'
           }
           dbUserRef.update({lastState: 6, nextState: 7, score: score})
-          return 'What is your height? (e.g.: 5 0  or 5\'0")'
+          if (language === 'Spanish') {
+            return 'Cuan alto eres (por ejemplo: 5 0  ó  5\'O")'
+          }
+          return 'What is your height? (e.g.: 5 0  or  5\'0")'
         //
         //////////////
         // State  7 //
@@ -239,10 +312,16 @@ function diagnosisScript(userId, text) {
           if (position === -1) {
             dbUserRef.update({lastState: 7, nextState: 7})
             console.log('  Position: '+position)
+            if (language === 'Spanish') {
+              return 'No entendí' + text + '. Intente de nuevo: (por ejemplo: 5 0  ó  5\'0")'
+            }
             return 'I didn\'t understand ' + text + '. Try again: (e.g.: 5 0  or 5\'0")'
           }
 
           dbUserRef.update({lastState: 7, nextState: 8, height: text})
+          if (language === 'Spanish') {
+            return '¿Cuál es su peso en libras? (por ejemplo: 185)'
+          }
           return 'What is your weight in pounds? (e.g.: 185)'
         //
         //////////////
@@ -254,9 +333,15 @@ function diagnosisScript(userId, text) {
           const weight = parseInt(text)
           if (weight === NaN) {
             dbUserRef.update({lastState: 8, nextState: 8})
+            if (language === 'Spanish') {
+              return 'No entendí' + text + '. Inténtalo de nuevo:'
+            }
             return 'I didn\'t understand ' + text + '. Try again:'
           } else if (weight <= 0) {
             dbUserRef.update({lastState: 8, nextState: 8})
+            if (language === 'Spanish') {
+              return 'Probemos un número mayor que cero. Inténtalo de nuevo:'
+            }
             return 'Let\'s try a number greater than zero. Try again:'
           }
 
@@ -265,6 +350,11 @@ function diagnosisScript(userId, text) {
           if (hwScore === -1) {
             dbUserRef.update({lastState: 8, nextState: 7})
             // TODO: better BMI calc or alternate risk computation?
+            if (language === 'Spanish') {
+              return 'Tuve problemas para calcular el riesgo de su altura y ' +
+                     'peso. Por favor, introduzca su altura de nuevo - que ' +
+                     'debe ser entre 4\'10" y 6\'4"?'
+            }
             return 'I had trouble computing your risk from your height and weight.' +
                    'Please enter your height again--it must be between 4\'10" and ' +
                    '6\'4"?'
@@ -273,27 +363,48 @@ function diagnosisScript(userId, text) {
           }
           dbUserRef.update({lastState: 8, nextState: 9, score: score})
           if (score < 5) {
+            if (language === 'Spanish') {
+              return [
+                '¡Felicitaciones! De las respuestas que proporcionó, no ' +
+                'parece que usted está en mayor riesgo de tener diabetes ' +
+                'tipo 2.',
+                '¡Ayúdenos a difundir la palabra sobre la Diabetes Tipo 2! ' +
+                'Comparte el chatbot con tus amigos y familiares 🎁!',
+                'Texto: +1 (415) 917-4663\n' +
+                'Facebook: m.me/diagnoserai\n' +
+                'Telegram: t.me/diagnoserbot']
+            }
             return [
-                      'Congratulations! From the answers you provided, it does ' +
-                      'not appear that you are at increased risk for ' +
-                      'having type 2 diabetes. ',
-                      'Help us spread the word about Type 2 Diabetes! ' +
-                      'Share the chatbot with your friends and family 🎁!',
-                      'Text: +1(415) 917-4663 \n' +
-                      'Facebook: m.me/diagnoserai\n' +
-                      'Telegram: t.me/diagnoserbot'
-                   ]
+              'Congratulations! From the answers you provided, it does ' +
+              'not appear that you are at increased risk for ' +
+              'having type 2 diabetes. ',
+              'Help us spread the word about Type 2 Diabetes! ' +
+              'Share the chatbot with your friends and family 🎁!',
+              'Text: +1(415) 917-4663 \n' +
+              'Facebook: m.me/diagnoserai\n' +
+              'Telegram: t.me/diagnoserbot']
           }
           else {
+            if (language === 'Spanish') {
+              return [
+                'De sus respuestas, parece que usted está en mayor riesgo de ' +
+                'tener diabetes tipo 2. En el futuro, podremos conectarte con ' +
+                'recursos de salud que pueden ayudarte. Por ahora, debe ' +
+                'consultar a un médico y obtener una prueba HBA1C para ' +
+                'confirmar si tiene diabetes tipo 2 o prediabetes. Más ' +
+                'información: https://doihaveprediabetes.org/',
+                '¿Desea que localizemos la clínica HBA1C más cercana para ' +
+                'confirmar su diagnóstico? (si o no)']
+            }
             return [
-                      'From your answers, it appears you are at increased risk of ' +
-                      'having type 2 diabetes. In future we\'ll be able to connect ' +
-                      'you with healthcare resources that can help. For now, you ' +
-                      'should see a doctor--and get a HBA1C test to confirm if ' +
-                      'have type 2 diabetes or prediabetes. ' +
-                      'Learn more: https://doihaveprediabetes.org/ ' ,
-                      'Would you like us to locate the closest HBA1C clinic to confirm your diagnosis? (yes or no)'
-                   ]
+              'From your answers, it appears you are at increased risk of ' +
+              'having type 2 diabetes. In future we\'ll be able to connect ' +
+              'you with healthcare resources that can help. For now, you ' +
+              'should see a doctor--and get a HBA1C test to confirm if ' +
+              'have type 2 diabetes or prediabetes. ' +
+              'Learn more: https://doihaveprediabetes.org/ ' ,
+              'Would you like us to locate the closest HBA1C clinic to ' +
+              'confirm your diagnosis? (yes or no)']
           }
         //
         //////////////
@@ -301,15 +412,34 @@ function diagnosisScript(userId, text) {
         ////////////////////////////////////////////////////////////////////////
         case 9:
           dbUserRef.update({lastState: 9, nextState: 10, clinicFinder: text})
+          if (language === 'Spanish') {
+            return [
+              '¡Gracias por su interés! Le enviaremos una actualización ' +
+              'cuando tengamos la función de localizador de clínica en su lugar.',
+              '¡Ayúdenos a difundir la palabra sobre la Diabetes Tipo 2! ' +
+              'Comparte el chatbot con tus amigos y familiares 🎁!',
+              'Texto: +1 (415) 917-4663\n' +
+              'Facebook: m.me/diagnoserai\n' +
+              'Telegram: t.me/diagnoserbot']
+          }
           return [
-                    'Thank you for your interest! We will send you an update when we have the clinic locator feature is in place.',
-                    'Help us spread the word about Type 2 Diabetes! ' +
-                    'Share the chatbot with your friends and family 🎁!',
-                    'Text: +1(415) 917-4663 \n' +
-                    'Facebook: m.me/diagnoserai\n' +
-                    'Telegram: t.me/diagnoserbot'
-                 ]
+            'Thank you for your interest! We will send you an update when we have the clinic locator feature is in place.',
+            'Help us spread the word about Type 2 Diabetes! ' +
+            'Share the chatbot with your friends and family 🎁!',
+            'Text: +1(415) 917-4663 \n' +
+            'Facebook: m.me/diagnoserai\n' +
+            'Telegram: t.me/diagnoserbot']
+        //
+        //////////////
+        // No State //
+        ////////////////////////////////////////////////////////////////////////
         default:
+          if (language === 'Spanish') {
+            return 'Gracias por participar. En el futuro, podremos conectarlo ' +
+                   'a un Programa de Prevención de la Diabetes si se ' +
+                   'encuentra que está en riesgo. Escriba \'reset \' si desea ' +
+                   'probar de nuevo la evaluación de riesgos.'
+          }
           return 'Thank you for participating. In future we\'ll be able to ' +
                  'connect you to a Diabetes Prevention Program if you were ' +
                  'found to be at risk. Type \'reset\' if you\'d like to try ' +
