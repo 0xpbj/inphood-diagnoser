@@ -84,8 +84,8 @@ function diagnosisScript(userId, text) {
       //////////////
       dbUserRef.update({lastState: 0, nextState: 1, score: 0})
       return 'Hello, I am Diagnoser AI! I can tell if you\'re at risk for ' +
-             'prediabetes and connect you to effective help. Your chances ' +
-             'of successfully avoiding this condition are excellent!\n\n' +
+             'type 2 diabetes or prediabetes and connect you to effective help. ' +
+             'Your chances of successfully avoiding this condition are excellent!\n\n' +
              'How many years old are you? (e.g. 41)'
     } else {
       const userInput = text.toLowerCase()
@@ -107,9 +107,9 @@ function diagnosisScript(userId, text) {
         case 0:
           dbUserRef.update({lastState: 0, nextState: 1, score: 0})
           return 'Hello, I am Diagnoser AI! I can tell if you\'re at risk for ' +
-                 'prediabetes and connect you to effective help. Your chances ' +
-                 'of successfully avoiding this condition are excellent!\n\n' +
-                 'How many years old are you? (e.g. 41)'
+             'type 2 diabetes or prediabetes and connect you to effective help. ' +
+             'Your chances of successfully avoiding this condition are excellent!\n\n' +
+             'How many years old are you? (e.g. 41)'
         //
         //////////////
         // State  1 //
@@ -273,16 +273,42 @@ function diagnosisScript(userId, text) {
           }
           dbUserRef.update({lastState: 8, nextState: 9, score: score})
           if (score < 5) {
-            return 'Congratulations! From the answers you provided, it does ' +
-                   'not appear that you are at increased risk for ' +
-                   'having type 2 diabetes.'
+            return [
+                      'Congratulations! From the answers you provided, it does ' +
+                      'not appear that you are at increased risk for ' +
+                      'having type 2 diabetes. ',
+                      'Help us spread the word about Type 2 Diabetes! ' +
+                      'Share the chatbot with your friends and family 🎁!',
+                      'Text: +1(415) 917-4663 \n' +
+                      'Facebook: m.me/diagnoserai\n' +
+                      'Telegram: t.me/diagnoserbot'
+                   ]
           }
-          return 'From your answers, it appears you are at increased risk of ' +
-                 'having type 2 diabetes. In future we\'ll be able to connect ' +
-                 'you with healthcare resources that can help. For now, you ' +
-                 'should see a doctor--only they can tell for sure if you ' +
-                 'have type 2 diabetes or prediabetes.'
-
+          else {
+            return [
+                      'From your answers, it appears you are at increased risk of ' +
+                      'having type 2 diabetes. In future we\'ll be able to connect ' +
+                      'you with healthcare resources that can help. For now, you ' +
+                      'should see a doctor--and get a HBA1C test to confirm if ' +
+                      'have type 2 diabetes or prediabetes. ' +
+                      'Learn more: https://doihaveprediabetes.org/ ' ,
+                      'Would you like us to locate the closest HBA1C clinic to confirm your diagnosis? (yes or no)'
+                   ]
+          }
+        //
+        //////////////
+        // State  9 //
+        ////////////////////////////////////////////////////////////////////////
+        case 9:
+          dbUserRef.update({lastState: 9, nextState: 10, clinicFinder: text})
+          return [
+                    'Thank you for your interest! We will send you an update when we have the clinic locator feature is in place.',
+                    'Help us spread the word about Type 2 Diabetes! ' +
+                    'Share the chatbot with your friends and family 🎁!',
+                    'Text: +1(415) 917-4663 \n' +
+                    'Facebook: m.me/diagnoserai\n' +
+                    'Telegram: t.me/diagnoserbot'
+                 ]
         default:
           return 'Thank you for participating. In future we\'ll be able to ' +
                  'connect you to a Diabetes Prevention Program if you were ' +
