@@ -475,8 +475,10 @@ function diagnosisScript(request) {
           //    https://support.twilio.com/hc/en-us/articles/223181508-Does-Twilio-support-concatenated-SMS-messages-or-messages-over-160-characters-
           //       - you can either work with them to correct that or
           //         shorten the messages
-          dbUserRef.update({lastState: 8, nextState: 9, score: score})
+          //    Try going all the way through the flow in Twilio using SMS (the green bubbles)
+          //    and see if you get anything after the weight question if your score is under 5.
           if (score < 5) {
+            dbUserRef.update({lastState: 8, nextState: 10, score: score})
             if (language === 'Spanish') {
               return [
                 '¡Felicitaciones! De las respuestas que proporcionó, no ' +
@@ -497,8 +499,8 @@ function diagnosisScript(request) {
               'Text: +1(415) 917-4663 \n' +
               'Facebook: m.me/diagnoserai\n' +
               'Telegram: t.me/diagnoserbot']
-          }
-          else {
+          } else {
+            dbUserRef.update({lastState: 8, nextState: 9, score: score})
             if (language === 'Spanish') {
               return [
                 'De sus respuestas, parece que usted está en mayor riesgo de ' +
