@@ -12,15 +12,32 @@ function letsPrompt() {
 // using prompt. letsPrompt is called initially and proxies user input to a message text
 // processor, simulating our chatbot (to speed up development instead of using Lambda)
 //
-const userId = 1626118340810665  // AC
+// const userId = 1626118340810665  // AC
+const userId = 007 // Potato Skinz
 let text = undefined
+
 function handlePrompt(err, result) {
   text = result.diagnosisAI
   console.log('> ' + text)
 
   if (text !== 'exit') {
+    let request = {
+      text: text,
+      type: 'telegram',
+      first_name: 'potato',
+      last_name: 'skinz',
+      locale: 'us_EN',
+      originalRequest: {
+        message: {
+          from: {
+            id: userId
+          }
+        }
+      }
+    }
     // Proxy the user's input to our message text processor (that uses Wit etc.)
-    return tp.processMessage(userId, text)
+    return tp.processMessage(request)
+    // return tp.processMessage(userId, text)
     .then((result) => {
       console.log(result)
       return letsPrompt()

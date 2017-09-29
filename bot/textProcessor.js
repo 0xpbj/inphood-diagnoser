@@ -87,6 +87,8 @@ function getIdFromRequest(request) {
   return undefined
 }
 
+// Do not enable this yet
+const enableEncryption = false
 
 function dbEncryptWrite(userId, dataObj) {
   const eDataObj = cryptoUtils.encryptObj(dataObj)
@@ -94,7 +96,12 @@ function dbEncryptWrite(userId, dataObj) {
   console.log('dbEncryptWrite: ')
   console.log('  ' + eDataObj)
   const dbUserRef = firebase.database().ref('/global/diagnosisai/users/' + userId)
-  dbUserRef.set(eDataObj)
+
+  if (enableEncryption) {
+    dbUserRef.set(eDataObj)
+  } else {
+    dbUserRef.set(dataObj)
+  }
 }
 
 function dbUpdateEncryptedObj(userId, dataObj, updateKeyValues) {
@@ -145,6 +152,7 @@ function diagnosisScript(request) {
             first_name: first_name, last_name: last_name, locale: locale,
             client: client, userId: userId, timezone: timezone, gender: gender,
             setupTime: setupTime})
+          // dbEncryptWrite(userId, dataObj)
 
             // Interestingly, in Spanish, names of languages are not capitalized.
             // See: http://www.spanishdict.com/answers/225670/i-didnt-know-that-rules-of-spanish-capitalization
@@ -186,10 +194,9 @@ function diagnosisScript(request) {
     } else {
       const userInput = text.toLowerCase()
 
-      let userData = snapshot.val()
-
-      // const eUserData = snapshot.val()
-      // let userData = cryptoUtils.decryptObj(eUserData)
+      let userData = (enableEncryption) ?
+        cryptoUtils.decryptObj(snapshot.val()) :
+        snapshot.val()
 
       let score = userData.score
       let nextState = userData.nextState
@@ -461,6 +468,13 @@ function diagnosisScript(request) {
           } else {
             score += hwScore
           }
+          // TODO: Prabhaav
+          //    These long messages will work fine in Facebook messenger and
+          //    Telegram, but they will fail in Twilio because of the 160 character
+          //    SMS limit. Here's a doc on that from Twilio:
+          //    https://support.twilio.com/hc/en-us/articles/223181508-Does-Twilio-support-concatenated-SMS-messages-or-messages-over-160-characters-
+          //       - you can either work with them to correct that or
+          //         shorten the messages
           dbUserRef.update({lastState: 8, nextState: 9, score: score})
           if (score < 5) {
             if (language === 'Spanish') {
