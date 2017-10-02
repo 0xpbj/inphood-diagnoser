@@ -1,0 +1,18 @@
+{
+  "name": "utils",
+  "version": "1.0.0",
+  "description": "Area to prototype utils for diagnosisAI.",
+  "main": "report.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "AC",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^4.0.0",
+    "firebase": "^4.4.0",
+    "prompt": "^1.0.0",
+    "request": "^2.83.0",
+    "request-promise": "^4.2.2"
+  }
+}
