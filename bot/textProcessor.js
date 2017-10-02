@@ -494,7 +494,7 @@ function diagnosisScript(request) {
                 '¡Ayúdenos a difundir la palabra sobre la Diabetes Tipo 2! ' +
                 'Comparte el chatbot con tus amigos y familiares 🎁!\n'
                 'Texto: +1 (415) 917-4663\n' +
-                // 'Facebook: m.me/diagnoserai\n' +
+                'Facebook: m.me/diagnoserai\n' +
                 'Telegram: t.me/diagnoserbot'
             }
             else {
@@ -504,7 +504,7 @@ function diagnosisScript(request) {
                 'Help us spread the word about Type 2 Diabetes! ' +
                 'Share the chatbot with your friends and family 🎁!\n' +
                 'Text: +1(415) 917-4663 \n' +
-                // 'Facebook: m.me/diagnoserai\n' +
+                'Facebook: m.me/diagnoserai\n' +
                 'Telegram: t.me/diagnoserbot'
             }
           } else {
@@ -544,14 +544,14 @@ function diagnosisScript(request) {
               '¡Ayúdenos a difundir la palabra sobre la Diabetes Tipo 2!' +
               'Comparte el chatbot con tus amigos y familiares 🎁!\n' +
               'Texto: +1 (415) 917-4663\n' +
-              // 'Facebook: m.me/diagnoserai\n' +
+              'Facebook: m.me/diagnoserai\n' +
               'Telegram: t.me/diagnoserbot'
           }
           return 'Thank you for your interest! We will send you an update when we have the clinic locator feature in place.\n' +
             'Help us spread the word about Type 2 Diabetes! ' +
             'Share the chatbot with your friends and family 🎁!\n' +
             'Text: +1(415) 917-4663 \n' +
-            // 'Facebook: m.me/diagnoserai\n' +
+            'Facebook: m.me/diagnoserai\n' +
             'Telegram: t.me/diagnoserbot'
         //
         //////////////
