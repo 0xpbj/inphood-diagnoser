@@ -2,7 +2,7 @@
 let dotEnv = require('dotenv').config({path: './../bot/.env-production'})
 
 const prompt = require('prompt')
-const tp = require('../bot//textProcessor.js')
+const tp = require('../bot/textProcessor.js')
 
 function letsPrompt() {
   return prompt.get(['diagnosisAI'], (err, result) => handlePrompt(err, result))

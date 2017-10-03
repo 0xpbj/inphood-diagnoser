@@ -2,11 +2,10 @@ let dotEnv = require('dotenv').config({path: './.env-production'})
 
 const requestPromise = require('request-promise')
 const firebase = require('firebase')
-
+const clinics = require('./clinics.js')
 const cryptoUtils = require('./cryptoUtils.js')
 
 if (firebase.apps.length === 0) {
-  console.log('FIREBASE_API_KEY = ' + process.env.FIREBASE_API_KEY)
   firebase.initializeApp({
     apiKey: process.env.FIREBASE_API_KEY,
     authDomain: process.env.FIREBASE_AUTH_DOMAIN,
@@ -459,7 +458,6 @@ function diagnosisScript(request) {
             }
             return 'Let\'s try a number greater than zero. Try again:'
           }
-
           const height = userData.height
           const hwScore = getHeightWeightScore(height, weight)
           if (hwScore === -1) {
@@ -537,37 +535,75 @@ function diagnosisScript(request) {
         // State  9 //
         ////////////////////////////////////////////////////////////////////////
         case 9:
-          dbUserRef.update({lastState: 9, nextState: 10, clinicFinder: text})
           if (language === 'Spanish') {
-            return '¡Gracias por su interés! Le enviaremos una actualización ' +
-              'cuando tengamos la función de localizador de clínica en su lugar.\n' +
-              '¡Ayúdenos a difundir la palabra sobre la Diabetes Tipo 2!' +
+            if (text === 'si' || text === 's') {
+              dbUserRef.update({lastState: 9, nextState: 10, clinicFinder: text})
+              //ACTODO: spanish equivalent to send me the zipcode
+              return 'Please send me your zipcode so I can find the closest clinic (ex: 95127)'
+            }
+            dbUserRef.update({lastState: 9, nextState: 11, clinicFinder: text})
+            return '¡Ayúdenos a difundir la palabra sobre la Diabetes Tipo 2!' +
               'Comparte el chatbot con tus amigos y familiares 🎁!\n' +
               'Texto: +1 (415) 917-4663\n' +
               'Facebook: m.me/diagnoserai\n' +
               'Telegram: t.me/diagnoserbot'
           }
-          return 'Thank you for your interest! We will send you an update when we have the clinic locator feature in place.\n' +
-            'Help us spread the word about Type 2 Diabetes! ' +
+          else {
+            if (text === 'yes' || text === 'y') {
+              dbUserRef.update({lastState: 9, nextState: 10, clinicFinder: text})
+              return 'Please send me your zipcode so I can find the closest clinic (ex: 95127)'
+            }
+            dbUserRef.update({lastState: 9, nextState: 11, clinicFinder: text})
+            return 'Help us spread the word about Type 2 Diabetes! ' +
             'Share the chatbot with your friends and family 🎁!\n' +
             'Text: +1(415) 917-4663 \n' +
             'Facebook: m.me/diagnoserai\n' +
             'Telegram: t.me/diagnoserbot'
+          }
+        //
+        //////////////
+        // State  10 //
+        ////////////////////////////////////////////////////////////////////////
+        case 10:
+          const zipcode = parseInt(text)
+          if (zipcode === NaN || zipcode < 0) {
+            dbUserRef.update({lastState: 10, nextState: 10})
+            if (language === 'Spanish') {
+              return 'No entendí' + text + '. Inténtalo de nuevo:'
+            }
+            return 'I didn\'t understand ' + text + '. Try again:'
+          }
+          const recommendedClinic = clinics.finder(text)
+          dbUserRef.update({lastState: 10, nextState: 11, userLocation: text})
+          return recommendedClinic
+          .then((result) => {
+            return 'Here is your closest clinic.\nName: ' + result.name + '\n' +
+              'Address: ' + result.address + '\n' +
+              'Hours: ' + result.hours + '\n' +
+              'Phone: ' + result.phone + '\n' +
+              'Thank you for participating. Help us spread the word about Type 2 Diabetes! ' +
+              'Share the chatbot with your friends and family 🎁!\n' +
+              'Text: +1(415) 917-4663 \n' +
+              'Facebook: m.me/diagnoserai\n' +
+              'Telegram: t.me/diagnoserbot'
+          })
         //
         //////////////
         // No State //
         ////////////////////////////////////////////////////////////////////////
         default:
           if (language === 'Spanish') {
-            return 'Gracias por participar. En el futuro, podremos conectarlo ' +
-                   'a un Programa de Prevención de la Diabetes si se ' +
-                   'encuentra que está en riesgo. Escriba \'reset \' si desea ' +
-                   'probar de nuevo la evaluación de riesgos.'
+            return 'Gracias por participar. ¡Ayúdenos a difundir la palabra sobre la Diabetes Tipo 2!' +
+              'Comparte el chatbot con tus amigos y familiares 🎁!\n' +
+              'Texto: +1 (415) 917-4663\n' +
+              'Facebook: m.me/diagnoserai\n' +
+              'Telegram: t.me/diagnoserbot'
           }
-          return 'Thank you for participating. In the future we\'ll be able to ' +
-                 'connect you to a Diabetes Prevention Program if you were ' +
-                 'found to be at risk. Type \'reset\' if you\'d like to try ' +
-                 'the risk assessment again.'
+          return 'Thank you for participating. Help us spread the word about Type 2 Diabetes! ' +
+            'Share the chatbot with your friends and family 🎁!\n' +
+            'Text: +1(415) 917-4663 \n' +
+            'Facebook: m.me/diagnoserai\n' +
+            'Telegram: t.me/diagnoserbot'
       }
     }
   })
