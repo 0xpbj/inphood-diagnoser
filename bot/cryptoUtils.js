@@ -7,14 +7,14 @@ const algorithm = 'aes-256-ctr'
 
 // Nodejs encryption with CTR
 // (from: https://github.com/chris-rock/node-crypto-examples/blob/master/crypto-ctr.js)
-function encrypt(text){
+exports.encryptStr = function(text){
   var cipher = crypto.createCipher(algorithm,password)
   var crypted = cipher.update(text,'utf8','hex')
   crypted += cipher.final('hex');
   return crypted;
 }
 
-function decrypt(text){
+exports.decryptStr = function(text){
   var decipher = crypto.createDecipher(algorithm,password)
   var dec = decipher.update(text,'hex','utf8')
   dec += decipher.final('utf8');
@@ -24,10 +24,10 @@ function decrypt(text){
 // Conveniences added by AC to handle objects
 exports.encryptObj = function(anObj) {
   const sObj = JSON.stringify(anObj)
-  return encrypt(sObj)
+  return exports.encryptStr(sObj)
 }
 
 exports.decryptObj = function(text) {
-  const sObj = decrypt(text)
+  const sObj = exports.decryptStr(text)
   return JSON.parse(sObj)
 }

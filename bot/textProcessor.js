@@ -4,6 +4,9 @@ const requestPromise = require('request-promise')
 const firebase = require('firebase')
 const clinics = require('./clinics.js')
 const cryptoUtils = require('./cryptoUtils.js')
+const constants = require('./constants.js')
+
+const finalState = constants.finalState
 
 if (firebase.apps.length === 0) {
   firebase.initializeApp({
@@ -484,7 +487,7 @@ function diagnosisScript(request) {
           //    Try going all the way through the flow in Twilio using SMS (the green bubbles)
           //    and see if you get anything after the weight question if your score is under 5.
           if (score < 5) {
-            dbUserRef.update({lastState: 8, nextState: 10, score: score})
+            dbUserRef.update({lastState: 8, nextState: finalState, score: score})
             if (language === 'Spanish') {
               return '¡Felicitaciones! De las respuestas que proporcionó, no ' +
                 'parece que usted está en mayor riesgo de tener Diabetes ' +
@@ -536,12 +539,12 @@ function diagnosisScript(request) {
         ////////////////////////////////////////////////////////////////////////
         case 9:
           if (language === 'Spanish') {
-            if (text === 'si' || text === 's') {
+            if (userInput === 'si' || userInput === 's') {
               dbUserRef.update({lastState: 9, nextState: 10, clinicFinder: text})
               //ACTODO: spanish equivalent to send me the zipcode
               return 'Please send me your zipcode so I can find the closest clinic (ex: 95127)'
             }
-            dbUserRef.update({lastState: 9, nextState: 11, clinicFinder: text})
+            dbUserRef.update({lastState: 9, nextState: finalState, clinicFinder: text})
             return '¡Ayúdenos a difundir la palabra sobre la Diabetes Tipo 2!' +
               'Comparte el chatbot con tus amigos y familiares 🎁!\n' +
               'Texto: +1 (415) 917-4663\n' +
@@ -549,11 +552,11 @@ function diagnosisScript(request) {
               'Telegram: t.me/diagnoserbot'
           }
           else {
-            if (text === 'yes' || text === 'y') {
+            if (userInput === 'yes' || userInput === 'y') {
               dbUserRef.update({lastState: 9, nextState: 10, clinicFinder: text})
               return 'Please send me your zipcode so I can find the closest clinic (ex: 95127)'
             }
-            dbUserRef.update({lastState: 9, nextState: 11, clinicFinder: text})
+            dbUserRef.update({lastState: 9, nextState: finalState, clinicFinder: text})
             return 'Help us spread the word about Type 2 Diabetes! ' +
             'Share the chatbot with your friends and family 🎁!\n' +
             'Text: +1(415) 917-4663 \n' +
@@ -561,7 +564,7 @@ function diagnosisScript(request) {
             'Telegram: t.me/diagnoserbot'
           }
         //
-        //////////////
+        ///////////////
         // State  10 //
         ////////////////////////////////////////////////////////////////////////
         case 10:
@@ -574,7 +577,7 @@ function diagnosisScript(request) {
             return 'I didn\'t understand ' + text + '. Try again:'
           }
           const recommendedClinic = clinics.finder(text)
-          dbUserRef.update({lastState: 10, nextState: 11, userLocation: text})
+          dbUserRef.update({lastState: 10, nextState: finalState, userLocation: text})
           return recommendedClinic
           .then((result) => {
             return 'Here is your closest clinic.\nName: ' + result.name + '\n' +
@@ -591,6 +594,7 @@ function diagnosisScript(request) {
         //////////////
         // No State //
         ////////////////////////////////////////////////////////////////////////
+        case finalState:
         default:
           if (language === 'Spanish') {
             return 'Gracias por participar. ¡Ayúdenos a difundir la palabra sobre la Diabetes Tipo 2!' +

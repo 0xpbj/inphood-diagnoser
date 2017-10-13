@@ -1,6 +1,10 @@
 // This path is okay b/c this code doesn't get bundled to AWS lambda
 let dotEnv = require('dotenv').config({path: './../bot/.env-production'})
 
+const constants = require('./../bot/constants.js')
+
+const finalState = constants.finalState
+
 const requestPromise = require('request-promise')
 const firebase = require('firebase')
 
@@ -43,7 +47,7 @@ function report() {
       finished: 0
     }
 
-    for (userId in ssVal) {
+    for (let userId in ssVal) {
       const userData = ssVal[userId]
       switch (userData.client) {
         case 'twilio':
@@ -52,7 +56,7 @@ function report() {
             twilio.atRisk++
             console.log('   clinicFinder: ' + userData.clinicFinder)
           }
-          if (userData.nextState === 10) {
+          if (userData.nextState === finalState) {
             twilio.finished++
           }
           // console.log('   nextState='+userData.nextState)
@@ -63,7 +67,7 @@ function report() {
             telegram.atRisk++
             console.log('   clinicFinder: ' + userData.clinicFinder)
           }
-          if (userData.nextState === 10) {
+          if (userData.nextState === finalState) {
             telegram.finished++
           }
           // console.log('   nextState='+userData.nextState)
@@ -74,7 +78,7 @@ function report() {
             facebook.atRisk++
             console.log('   clinicFinder: ' + userData.clinicFinder)
           }
-          if (userData.nextState === 10) {
+          if (userData.nextState === finalState) {
             facebook.finished++
           }
           // console.log('   nextState='+userData.nextState)
