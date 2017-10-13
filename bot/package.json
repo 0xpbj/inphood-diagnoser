@@ -23,6 +23,7 @@
     "dotenv": "^4.0.0",
     "firebase": "^4.4.0",
     "huh": "^2.0.1",
+    "promise-delay": "^2.1.0",
     "request": "^2.83.0",
     "request-promise": "^4.2.2"
   }

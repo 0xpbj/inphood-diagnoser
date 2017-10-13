@@ -85,6 +85,9 @@ function getIdFromRequest(request) {
   else if (request.type === 'twilio') {
     return request.sender
   }
+  else if (request.type === 'slack-slash-command') {
+    return request.sender
+  }
   // TODO: other plafs...
   return undefined
 }
@@ -170,7 +173,8 @@ function diagnosisScript(request) {
           console.log('FB Profile error:', error)
           return ''
         })
-      } else {
+      } 
+      else {
         let dataObj = {lastState: -1, nextState: 0, score: 0,
           client: client, userId: userId, setupTime: setupTime}
 
@@ -198,7 +202,8 @@ function diagnosisScript(request) {
         return 'Please type \'1\' to chat in English.\n' +
                'Escribe \'2\' para chatear en español.'
       }
-    } else {
+    }
+    else {
       let userInput = text.toLowerCase()
       userInput = userInput.trim()
 
